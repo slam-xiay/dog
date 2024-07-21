@@ -47,6 +47,7 @@ bool Linelaser::ParseData(std::vector<uint8_t> &data) {
 
     data.erase(data.begin(), data.begin() + 4);
   }
+  return true;
   // data.clear();
   //   while (data.size() >= 0 && data[0] != kLinelaserFrameHeader)
   //     data.erase(data.begin());
@@ -91,6 +92,7 @@ bool Linelaser::ParseData(std::vector<uint8_t> &data) {
 
 bool Linelaser::SetBandrate(const int &bandrate_code) {
   // 针对不同的波特率分别连接串口，发送停机，改波特率的命令。
+  return true;
 };
 
 bool Linelaser::SetStartCommand() {

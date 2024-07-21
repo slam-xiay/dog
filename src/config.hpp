@@ -83,5 +83,12 @@ constexpr uint8_t kLinelaserRestartScan = 0x67;
 constexpr uint8_t kLinelaserSetMode = 0x69;
 constexpr uint8_t kLinelaserSetBias = 0xD9;
 
+const std::string kServerIP = "192.168.1.201";
+constexpr int kLidarSourcePort =10000;
+constexpr int kLidarDestinationPort =2368;
+constexpr int kGpsSourcePort = 10110;
+constexpr double kLidarStartAngle = 0.f;
+constexpr int kLidarFrequence = 10;
+
 // constexpr uint8_t kLinelaserSetBaudrate = 0x68;
 #endif

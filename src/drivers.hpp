@@ -26,6 +26,7 @@ class Drivers {
   std::vector<std::shared_ptr<std::thread>> ultrasonic_thread_ptrs_;
   std::vector<std::shared_ptr<Linelaser>> linelaser_ptrs_;
   std::vector<std::shared_ptr<std::thread>> linelaser_thread_ptrs_;
+  
 };
 
 #endif // !DRIVERS_HPP

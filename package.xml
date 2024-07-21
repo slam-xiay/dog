@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-    <name>check</name>
+    <name>driver</name>
     <version>1.0.0</version>
-    <description>The check package</description>    
+    <description>The driver package</description>    
     <maintainer email="402626595@qq.com">xiay</maintainer>
     <buildtool_depend>catkin</buildtool_depend>
     <license>xiay</license>

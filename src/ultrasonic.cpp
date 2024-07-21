@@ -68,6 +68,7 @@ bool Ultrasonic::ParseData(std::vector<uint8_t> &data) {
       Publish(range);
     }
   }
+  return true;
 };
 
 // bool Ultrasonic::ParseData(const char *buffer, size_t length) {
