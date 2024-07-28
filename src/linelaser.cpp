@@ -13,7 +13,7 @@ Linelaser::Linelaser(std::shared_ptr<ros::NodeHandle> node_handle_ptr,
 void Linelaser::LinelaserRxThread() {
   ros::Rate rate(kLinelaserFrequence);
   std::vector<uint8_t> rx_data;
-  LOG(ERROR) << name_ << " thread started!";
+  LOG(ERROR) << name_ << "thread started!";
   while (true) {
     if (is_running_ && ReadFromIO(rx_data)) ParseData(rx_data);
     rate.sleep();

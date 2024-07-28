@@ -67,6 +67,6 @@ class Linelaser : public Serial {
   ros::Publisher publisher_;
   ros::ServiceServer switch_;
   std::string name_;
-  bool is_running_{false};
+  bool is_running_{true};
 };
 #endif

@@ -12,6 +12,7 @@
 // #include "camera.hpp"
 #include "linelaser.hpp"
 #include "ultrasonic.hpp"
+#include "multilinelaser.hpp"
 
 class Drivers {
  public:
@@ -22,11 +23,12 @@ class Drivers {
 
  private:
   std::shared_ptr<ros::NodeHandle> node_handle_ptr_;
-  std::vector<std::shared_ptr<Ultrasonic>> ultrasonic_ptrs_;
-  std::vector<std::shared_ptr<std::thread>> ultrasonic_thread_ptrs_;
-  std::vector<std::shared_ptr<Linelaser>> linelaser_ptrs_;
-  std::vector<std::shared_ptr<std::thread>> linelaser_thread_ptrs_;
-  
+  // std::vector<std::shared_ptr<Ultrasonic>> ultrasonic_ptrs_;
+  // std::vector<std::shared_ptr<std::thread>> ultrasonic_thread_ptrs_;
+  // std::vector<std::shared_ptr<Linelaser>> linelaser_ptrs_;
+  // std::vector<std::shared_ptr<std::thread>> linelaser_thread_ptrs_;
+  std::shared_ptr<Multilinelaser> multilinelaser_ptr_;
+  std::shared_ptr<std::thread> multilinelaser_thread_ptr_;
 };
 
 #endif // !DRIVERS_HPP

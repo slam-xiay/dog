@@ -103,7 +103,7 @@ bool Serial::ReadFromIO(std::vector<uint8_t>& data) {
     if (FD_ISSET(fd_, &read_fds)) rx_len = read(fd_, rx_buf, kMaxSerialBuf);
   }
   for (int i = 0; i < rx_len; i++) data.push_back(*(rx_buf + i));
-  // LOG(ERROR) << "rx_len:(" << rx_len << ").";
+
   // printf("\n");
   // printf("rx_len(%d)", rx_len);
   // printf("\n");
