@@ -1,5 +1,6 @@
 #include "multilinelaser.hpp"// add tag 1
 Multilinelaser::Multilinelaser(std::shared_ptr<ros::NodeHandle> node_handle_ptr):node_handle_ptr_(node_handle_ptr){  
+    cloud_publisher_ = node_handle_ptr->advertise<sensor_msgs::PointCloud>("multilinelaser_cloud", 1000);
     address_.sin_family = AF_INET;
     address_.sin_port = htons(2368);
     address_.sin_addr.s_addr = INADDR_ANY;
@@ -38,8 +39,13 @@ bool Multilinelaser::ReadFromIO(std::vector<uint8_t>& data){
 }
 
 bool Multilinelaser::ParseData(std::vector<uint8_t>& data){
+  cloud_.header.frame_id = "base_link";  // 没开里程计转换无法转换
+  cloud_.channels.resize(1);
+  cloud_.channels[0].name = "intensities";
   while (data.size() >= sizeof(MultilinelaserFrame)) {
     size_t drop = 0;
+    Eigen::Vector3d laser_link(kMultilinelaserToBaseTranslationX, 
+      kMultilinelaserToBaseTranslationY, kMultilinelaserToBaseTranslationZ);
     while(data.size() >= sizeof(MultilinelaserFrame)){
       if(data[0] == kMultilinelaserHeader1&&data[1]==kMultilinelaserHeader2){
         break;
@@ -56,11 +62,46 @@ bool Multilinelaser::ParseData(std::vector<uint8_t>& data){
             data.end() + sizeof(MultilinelaserFrame));
         data.erase(data.begin(), data.begin() + sizeof(MultilinelaserFrame));
         MultilinelaserFrame *multiline_laser_frame = (MultilinelaserFrame*)multiline_laser_data.data();
-        LOG(ERROR)<<"angle:("<<double(multiline_laser_frame->block->azimuth)/100<<")";
+        for(auto&& block:multiline_laser_frame->block){
+          double yaw = DegToRad(double(block.azimuth)/100);
+          for(size_t i = 0;i<16;i++){
+            double pitch = DegToRad(kMultilinelaserPitchOffset[i]);
+            double range = double(block.channel[i].distance)*0.004;
+            Eigen::Vector3d position = laser_link+Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
+                                        Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+                                        Eigen::Vector3d(range, 0., 0.);
+            geometry_msgs::Point32 pt;
+            pt.x = position.x();
+            pt.y = position.y();
+            pt.z = position.z();
+            cloud_.points.push_back(pt);
+            cloud_.channels[0].values.push_back(block.channel[i].reflectivity);
+          }
+          if(yaw>6.28) Publish();
+          // LOG_EVERY_N(ERROR,30)<<"yaw:("<<yaw<<")";
+        }      
+        // LOG(ERROR)<<"time:("<<(uint32_t(multiline_laser_frame->timestamp[3])<<24
+        //   |uint32_t(multiline_laser_frame->timestamp[2])<<16
+        //   |uint32_t(multiline_laser_frame->timestamp[1])<<8
+        //   |uint32_t(multiline_laser_frame->timestamp[0]))<<");";
+        // LOG(ERROR)<<"year:("<<multiline_laser_frame->time[0]+1900<<");";
+        // LOG(ERROR)<<"month:("<<int(multiline_laser_frame->time[1])<<");";
+        // LOG(ERROR)<<"day:("<<int(multiline_laser_frame->time[2])<<");";
+        // LOG(ERROR)<<"hour:("<<int(multiline_laser_frame->time[3])<<");";
+        // LOG(ERROR)<<"minute:("<<int(multiline_laser_frame->time[4])<<");";
+        // LOG(ERROR)<<"second:("<<int(multiline_laser_frame->time[5])<<");";
+        // LOG(ERROR)<<"motor speed:("<<double(uint16_t(multiline_laser_frame->motor_speed[1])<<8|multiline_laser_frame->motor_speed[0])<<")";
       }
   }
   return true;
 }
+
+void Multilinelaser::Publish(){
+  cloud_.header.stamp = ros::Time::now();
+  cloud_publisher_.publish(cloud_);
+  cloud_.points.clear();
+  cloud_.channels[0].values.clear();
+};
 void Multilinelaser::MultilinelaserRxThread() {
   ros::Rate rate(kLidarFrequence);
   std::vector<uint8_t> rx_data;
@@ -69,82 +110,4 @@ void Multilinelaser::MultilinelaserRxThread() {
     if (is_running_ && ReadFromIO(rx_data)) ParseData(rx_data);
     rate.sleep();
   }
-  // std::vector<uint8_t> rx_data;
-  // LOG(ERROR) << name_ << "thread started!";
-  // while(true){
-  //   std::vector<uint8_t> rx_data;
-  //   if (fd_ == -1) continue;
-  //   uint8_t* rx_buf = new uint8_t[kMaxSerialBuf];
-  //   size_t rx_len = 0;
-  //   static timespec timeout = {0, (long)(kPerReadTimeoutns)};  // 0.1ms
-  //   fd_set read_fds;
-  //   FD_ZERO(&read_fds);
-  //   FD_SET(fd_, &read_fds);
-  //   int r = pselect(fd_ + 1, &read_fds, NULL, NULL, &timeout, NULL);
-  //   if (r <= 0) continue;
-  //   if (FD_ISSET(fd_, &read_fds)) rx_len = read(fd_, rx_buf, kMaxSerialBuf);
-  //   // LOG(ERROR)<<"size:("<<rx_len<<")";
-  //   // printf("\n====\n");
-  //   // for (int i = 0; i < rx_len; i++) {
-  //   //   printf("%2x ",*(rx_buf + i));
-  //   //   // data.push_back(*(rx_buf + i));      
-  //   // }
-  //   // printf("\n****\n");
-  //   rate.sleep();
-  // }
-  // struct pollfd fds[1];
-  // fds[0].fd = fd_;
-  // fds[0].events = POLLIN;
-  // sockaddr_in senderAddress;
-  // socklen_t senderAddressLen = sizeof(senderAddress);
-
-  
-
-  // int connect_res = -1;
-  // while (true) {
-    // while(true){
-    //   int connect_res = connect(fd_, (struct sockaddr*)&address_, sizeof(address_));
-    //   LOG(ERROR)<<"Connect:("<<connect_res<<").";
-    //   if(connect_res>=0) break;
-    //   sleep(0.1);
-    // }
-    // int nrecvSize = 0;
-    // char msg[1024];
-    // int read_res = read(fd_, msg, 1000);
-    // LOG(ERROR)<<"Read response:("<<read_res<<").";
-// if((nrecvSize = read(fd_, msg, 1000)) < 0)	//接受数据
-// 		{
-// 			printf("read Error: %s (errno: %d)\n", strerror(errno), errno);
-// 		}
-// 		else if(nrecvSize == 0)
-// 		{
-// 			printf("Service Close!\n");
-// 		}
-// 		else
-// 		{
-// 			printf("Server return: %s\n", msg);
-// 		}
-
-
-    // int retval = poll(fds, 1, 1000);
-    // LOG(ERROR)<<"retval:("<<retval<<")";
-    //   if (retval < 0&&errno != EINTR) 
-    //   LOG(ERROR)<< "Poll error:("<< strerror(errno)<<").";
-    //   if(retval>0){
-    //       if((fds[0].revents & POLLERR) || (fds[0].revents & POLLHUP) ||
-    //           (fds[0].revents & POLLNVAL)) LOG(ERROR)<<"poll() reports Pandar error";
-    //       else{
-    //           senderAddressLen = sizeof(senderAddress);
-    //           ssize_t nbytes;
-    //           if (fds[0].revents & POLLIN) {
-    //               uint8_t data[1500];
-    //               nbytes = recvfrom(fds[0].fd, &data[0], 1500, 0,
-    //               reinterpret_cast<sockaddr *>(&senderAddress),&senderAddressLen);
-    //               LOG(ERROR)<<"receive nbytes:("<<nbytes<<")";
-    //           }
-    //       }
-    //   // if (is_running_ && ReadFromIO(rx_data)) ParseData(rx_data);
-    //       rate.sleep();
-    //   }
-  // }
 }

@@ -1,12 +1,17 @@
 {
+    "clang-format.style": "file",
+    "clang-format.assumeFilename": "/home/user/.clang-format",
+    "clang-format.executable": "/usr/bin/clang-format",
+    "clang-format.fallbackStyle": "Google",
+    "editor.defaultFormatter": "xaver.clang-format",
     "C_Cpp.errorSquiggles": "disabled",
-    "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
-        "clang-diagnostic-error",
-        "clang-diagnostic-error",
-        "clang-diagnostic-error",
-        "clang-diagnostic-error",
-        "clang-diagnostic-error"
-    ],
+    // "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
+    //     "clang-diagnostic-error",
+    //     "clang-diagnostic-error",
+    //     "clang-diagnostic-error",
+    //     "clang-diagnostic-error",
+    //     "clang-diagnostic-error"
+    // ],
     "files.associations": {
         "*.bb": "makefile",
         "cctype": "cpp",
@@ -76,6 +81,9 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "variant": "cpp",
-        "bit": "cpp"
+        "bit": "cpp",
+        "core": "cpp",
+        "*.ipp": "cpp",
+        "*.txx": "cpp"
     }
 }

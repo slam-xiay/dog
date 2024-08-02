@@ -13,6 +13,7 @@
 #include "linelaser.hpp"
 #include "ultrasonic.hpp"
 #include "multilinelaser.hpp"
+#include "imu.hpp"
 
 class Drivers {
  public:
@@ -29,6 +30,8 @@ class Drivers {
   // std::vector<std::shared_ptr<std::thread>> linelaser_thread_ptrs_;
   std::shared_ptr<Multilinelaser> multilinelaser_ptr_;
   std::shared_ptr<std::thread> multilinelaser_thread_ptr_;
+  std::shared_ptr<Imu> imu_ptr_;
+  std::shared_ptr<std::thread> imu_thread_ptr_;
 };
 
 #endif // !DRIVERS_HPP

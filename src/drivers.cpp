@@ -48,6 +48,12 @@ Drivers::Drivers() {
   multilinelaser_thread_ptr_ =
       std::make_shared<std::thread>(&Multilinelaser::MultilinelaserRxThread,
                                       multilinelaser_ptr_);
+
+  imu_ptr_ =
+      std::make_shared<Imu>(node_handle_ptr_,kImuPort);
+
+  imu_thread_ptr_ =
+      std::make_shared<std::thread>(&Imu::ImuRxThread,imu_ptr_);
 };
 Drivers::~Drivers() {
   // for (auto&& ultrasonic_ptr : ultrasonic_ptrs_)

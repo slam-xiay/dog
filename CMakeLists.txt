@@ -5,7 +5,7 @@ SET(CMAKE_CXX_FLAGS_DEBUG "$ENV{CXXFLAGS} -O0 -Wall -g -ggdb")
 SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_BUILD_TYPE "RELEASE")
+#set(CMAKE_BUILD_TYPE "RELEASE")
 find_package(catkin REQUIRED COMPONENTS roscpp rospy sensor_msgs std_msgs std_srvs tf
         tf2 tf2_ros tf2_geometry_msgs geometry_msgs dynamic_reconfigure)
 find_package(Boost REQUIRED)

@@ -11,9 +11,13 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <netinet/in.h>
+#include <sensor_msgs/PointCloud.h>
+#include <Eigen/Core>
+#include <Eigen/Dense>
 struct ChannelFrame{
   uint16_t distance;
-  uint16_t reflectivity;
+  uint8_t reflectivity;
+  uint8_t reserve;
 };
 
 struct BlockFrame{
@@ -46,7 +50,7 @@ struct MultilinelaserFrame {
 
 class Multilinelaser
 {
-  public:
+public:
   Multilinelaser(std::shared_ptr<ros::NodeHandle> node_handle_ptr);
   ~Multilinelaser();
   Multilinelaser(const Multilinelaser &) = delete;
@@ -54,8 +58,9 @@ class Multilinelaser
   void MultilinelaserRxThread();
   bool ReadFromIO(std::vector<uint8_t>& data);
   bool ParseData(std::vector<uint8_t> &data);
-
-  private:
+  void Publish();
+private:
+  
   int fd_{-1};
   sockaddr_in address_;
   std::shared_ptr<ros::NodeHandle> node_handle_ptr_;
@@ -63,6 +68,8 @@ class Multilinelaser
   ros::ServiceServer switch_;
   std::string name_;
   bool is_running_{true};
+  sensor_msgs::PointCloud cloud_;
+  ros::Publisher cloud_publisher_;
 };
 
 #endif 

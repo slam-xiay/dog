@@ -3,7 +3,7 @@
 Ultrasonic::Ultrasonic(std::shared_ptr<ros::NodeHandle> node_handle_ptr,
                        const std::string &serial_port)
     : node_handle_ptr_(node_handle_ptr),
-      Serial(serial_port, kBandrateCode115200) {
+      Serial(serial_port) {
   name_ = serial_port.substr(5);
   publisher_ = node_handle_ptr_->advertise<sensor_msgs::Range>(name_, 1);
   switch_ = node_handle_ptr_->advertiseService(
@@ -18,7 +18,8 @@ void Ultrasonic::UltrasonicRxThread() {
     rate.sleep();
   }
 };
-bool Ultrasonic::ParseData(std::vector<uint8_t> &data) {
+void Ultrasonic::ParseData(std::vector<uint8_t> &data) {
+  LOG(ERROR)<<"size:("<<data.size()<<").";
   if (data.size() >= 1) {
     static auto last = ros::Time::now();
     auto current = ros::Time::now();
@@ -51,7 +52,7 @@ bool Ultrasonic::ParseData(std::vector<uint8_t> &data) {
       continue;
     }
     if (data_byte == 0xEEEE || data_byte == 0xFFFD) {
-      // LOG(ERROR) << name_ << " invalid.";
+      LOG(ERROR) << name_ << " invalid.";
       continue;
     }
     if (data_byte == 0xFFFE) {
@@ -61,14 +62,13 @@ bool Ultrasonic::ParseData(std::vector<uint8_t> &data) {
     float range = float(int(data_byte)) / 1000;
     if (range < 0.05 || range > 1.5) {
       // LOG(ERROR) << std::hex << std::uppercase << "(" << data_byte << ").";
-      // LOG(ERROR) << name_ << " out of range:(" << range << ").";
+      LOG(ERROR) << name_ << " out of range:(" << range << ").";
       // range = std::numeric_limits<float>::quiet_NaN();
     } else {
-      // LOG(ERROR) << name_ << " publish range:(" << range << ").";
-      Publish(range);
+      LOG(ERROR) << name_ << " publish range:(" << range << ").";
+      Publish(name_,range);
     }
   }
-  return true;
 };
 
 // bool Ultrasonic::ParseData(const char *buffer, size_t length) {
@@ -119,28 +119,37 @@ bool Ultrasonic::ParseData(std::vector<uint8_t> &data) {
 //   // }
 //   return true;
 // };
-void Ultrasonic::Publish(const float &range) {
+void Ultrasonic::Publish(const std::string& name,const float &range) {
   static auto last = ros::Time::now();
   sensor_msgs::Range msg;
-  msg.header.frame_id = name_;
+  msg.header.frame_id = name;
   msg.header.stamp = ros::Time::now();
   msg.range = range;
   publisher_.publish(msg);
 }
 
-void Ultrasonic::SetRunning(const bool &running) {
-  is_running_ = running;
-  if (is_running_) {
-    Open();
+bool Ultrasonic::SetRunning(const bool &running) {
+  if (running) {
+    Close();
+    Open(kBandrateCode115200);
+    WriteToIO({0xAA});
+    is_running_ = true;
   } else {
     Close();
+    is_running_ = false;
   }
+  return true;
 }
 
 bool Ultrasonic::SwitchCallBack(std_srvs::SetBool::Request &req,
                                 std_srvs::SetBool::Response &res) {
-  SetRunning(req.data);
-  return true;
+  if (SetRunning(req.data)) {
+    res.success = true;
+    return true;
+  } else {
+    res.success = false;
+    return false;
+  }
 };
 
 // void Ultrasonic::

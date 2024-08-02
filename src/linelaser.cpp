@@ -3,7 +3,7 @@
 Linelaser::Linelaser(std::shared_ptr<ros::NodeHandle> node_handle_ptr,
                      const std::string &serial_port)
     : node_handle_ptr_(node_handle_ptr),
-      Serial(serial_port, kBandrateCode921600) {
+      Serial(serial_port) {
   name_ = serial_port.substr(5);
   publisher_ = node_handle_ptr_->advertise<sensor_msgs::Range>(name_, 1);
   switch_ = node_handle_ptr_->advertiseService(
@@ -13,158 +13,208 @@ Linelaser::Linelaser(std::shared_ptr<ros::NodeHandle> node_handle_ptr,
 void Linelaser::LinelaserRxThread() {
   ros::Rate rate(kLinelaserFrequence);
   std::vector<uint8_t> rx_data;
-  LOG(ERROR) << name_ << "thread started!";
   while (true) {
+    // LOG_EVERY_N(ERROR,1)<<name_<<" loop is running:("<<is_running_<<"),is_start:("<<is_start_<<"),fd:("<<fd_<<");";
     if (is_running_ && ReadFromIO(rx_data)) ParseData(rx_data);
     rate.sleep();
   }
 };
 
-bool Linelaser::ParseData(std::vector<uint8_t> &data) {
-  // LOG(ERROR) << name_ << " data size:(" << data.size() << ").";
-
-  // if (data.size() >= 4) {
-  //   static auto last = ros::Time::now();
-  //   auto current = ros::Time::now();
-  //   double duration = (current - last).toSec();
-  //   LOG(ERROR) << name_ << " rx length(" << data.size()
-  //              << "),duration from last(" << duration << ");";
-  //   last = current;
-  // }
-  // data.clear();
-  while (data.size() >= 322) {
-    size_t drop = 0;
-    while (data.size() >= sizeof(LinelaserFrame) &&
-           data[0] != kLinelaserHearder && data[1] != kLinelaserHearder &&
-           data[2] != kLinelaserHearder && data[3] != kLinelaserHearder) {
-      data.erase(data.begin());
-      drop++;
+void Linelaser::ParseData(std::vector<uint8_t> &data) {
+  auto get_average_range = [&](const std::vector<uint8_t> &data) {
+    float average = 0.f;
+    if (data.size() != sizeof(LinelaserDataFrame)) return average;
+    for (size_t i = 10; i < data.size() - 1; i += 2) {
+      float range = float((data[i] << 8 | data[i + 1]) & 0x01FF) / 1000;
+      average += range;
     }
-    LOG(ERROR) << "Drop size:(" << drop << ").";
-    if (data.size() < sizeof(LinelaserFrame)) break;
-    int length = int(uint16_t(data[7]) << 8 | uint16_t(data[6]));
-    LOG(ERROR) << "Data length:(" << length << ").";
+    LOG_EVERY_N(ERROR,100) <<name_<< "average range:(" << average / 160 << ").";
+    return (average / 160);
+  };
 
-    data.erase(data.begin(), data.begin() + 4);
-  }
-  return true;
-  // data.clear();
-  //   while (data.size() >= 0 && data[0] != kLinelaserFrameHeader)
-  //     data.erase(data.begin());
-  //   if (data.size() < sizeof(LinelaserFrame)) break;
-  //   std::vector<uint8_t> Linelaser_data(data.begin(),
-  //                                       data.end() + sizeof(LinelaserFrame));
-  //   data.erase(data.begin(), data.begin() + sizeof(LinelaserFrame));
-  //   LinelaserFrame *Linelaser_frame = (LinelaserFrame
-  //   *)Linelaser_data.data();
-  //   uint8_t summary = Linelaser_frame->highbits + Linelaser_frame->lowbits +
-  //                     Linelaser_frame->header;
-  //   if (summary != Linelaser_frame->summary) {
-  //     LOG(ERROR) << name_ << " crc check error!";
-  //     continue;
-  //   }
-  //   uint16_t data_byte = uint16_t(Linelaser_frame->highbits) << 8 |
-  //                        uint16_t(Linelaser_frame->lowbits);
-  //   if (data_byte == 0xFFFF) {
-  //     LOG(ERROR) << name_ << " timeout.";
-  //     continue;
-  //   }
-  //   if (data_byte == 0xEEEE || data_byte == 0xFFFD) {
-  //     // LOG(ERROR) << name_ << " invalid.";
-  //     continue;
-  //   }
-  //   if (data_byte == 0xFFFE) {
-  //     LOG(ERROR) << name_ << " co frequency interference.";
-  //     continue;
-  //   }
-  //   float range = float(int(data_byte)) / 1000;
-  //   if (range < 0.05 || range > 1.5) {
-  //     // LOG(ERROR) << std::hex << std::uppercase << "(" << data_byte <<
-  //     ").";
-  //     // LOG(ERROR) << name_ << " out of range:(" << range << ").";
-  //     // range = std::numeric_limits<float>::quiet_NaN();
-  //   } else {
-  //     LOG(ERROR) << name_ << " publish range:(" << range << ").";
-  //     Publish(range);
-  //   }
-  // }
-};
+  auto get_frame_crc = [&](const std::vector<uint8_t> &data) {
+    uint8_t summary = 0;
+    if (data.size() != sizeof(LinelaserDataFrame)) return summary;
+    for (size_t i = 4; i < sizeof(LinelaserDataFrame) - 1; i++){
+      summary += data[i];
+      // printf("i:(%lu):(%02x) ", i,data[i]);
+    }
+    // printf("\n=====get_frame_crc=====\n");
+    // for (auto&& byte : data) {
+    //   printf("%02x ", byte);
+    // }
+    // printf("\n=====get_frame_crc=====(%02x)(%02x)\n",summary,data[sizeof(LinelaserDataFrame) - 1]);
+    return summary;
+  };
 
-bool Linelaser::SetBandrate(const int &bandrate_code) {
-  // 针对不同的波特率分别连接串口，发送停机，改波特率的命令。
-  return true;
-};
+  auto get_command_crc = [&](const std::vector<uint8_t> &data) {
+    uint8_t summary = 0;
+    if (data.size() != sizeof(LinelaserCommandFrame)) return summary;
+    for (size_t i = 4; i < sizeof(LinelaserCommandFrame) - 1; i++)
+      summary += data[i];
+    return summary;
+  };
 
-bool Linelaser::SetStartCommand() {
-  bool is_start = false;
-  std::vector<uint8_t> rx_data;
-  while (!is_start) {
-    usleep(10000);
-    WriteToIO(kLinelaserStartCommand);
-    usleep(10000);
-    ReadFromIO(rx_data);
-    usleep(10000);
-    while (rx_data.size() >= 4) {
-      if (rx_data[0] == kLinelaserHearder && rx_data[1] == kLinelaserHearder &&
-          rx_data[2] == kLinelaserHearder && rx_data[3] == kLinelaserHearder) {
-        printf("\n");
-        printf("Data size has headers:(%lu)", rx_data.size());
-        printf("\n");
-        for (auto &&byte : rx_data) {
-          printf("%02x ", byte);
-        }
-        printf("\n");
-        rx_data.clear();
-      } else {
-        printf("%02x ", rx_data[0]);
-        rx_data.erase(rx_data.begin());
+  // LOG(ERROR) << "Data size before while: (" << data.size() << ").";
+  while (data.size() >= sizeof(LinelaserCommandFrame)) {
+    size_t drop = 0;
+    while (data.size() >= sizeof(LinelaserCommandFrame)) {
+      if (data[0] == kLinelaserHearder && data[1] == kLinelaserHearder &&
+          data[2] == kLinelaserHearder && data[3] == kLinelaserHearder){
+        // LOG(ERROR)<<"Find header size:("<<data.size()<<").";
+        break;
+      }
+      else{
+        drop++;
+        // printf("drop:(%lu):(%02x) ", drop,data[0]);
+        // printf("%02x ", data[0]);
+        data.erase(data.begin());
       }
     }
-    printf("Rx size:%ld\n", rx_data.size());
-    usleep(10000);
-  }
-  return is_start;
-};
+    if(drop>0) LOG(ERROR)<<name_ <<" drop size:("<<drop<<").";
+    if (data.size() < sizeof(LinelaserCommandFrame))
+      return;
+    else {
+      size_t length = size_t(uint16_t(data[7]) << 8 | uint16_t(data[6]));
+      // LOG(ERROR) << "length:(" << length << "),size:(" << data.size() << ").";
+      switch (length) {
+        case kLinelaserCommandLength:
+          if (data.size() >= sizeof(LinelaserCommandFrame)) {
+            std::vector<uint8_t> linelaser_command(
+                data.begin(), data.begin() + sizeof(LinelaserCommandFrame));
+            data.erase(data.begin(), data.begin() + sizeof(LinelaserCommandFrame));
+            if (get_command_crc(linelaser_command) != linelaser_command.back()) {
+              //  printf("get_frame_crc:(%02x %02x).\n", get_frame_crc(linelaser_frame) ,linelaser_frame.back());
+              // LOG(ERROR)<<std::showbase<<std::hex<<"summary:("<<(int)(linelaser_frame.back())<<"),crc:("<<(int)(get_frame_crc(linelaser_frame))<<")";
+              LOG(ERROR) << name_ << " command crc error.";
+            } else {
+              LOG(ERROR) << "Receive command ======= ("<<std::showbase<<std::hex<<int(data[5])<<").";
+              switch (data[5]){
+                case 0x63:
+                  LOG(ERROR) <<name_<< " Receive start command response.";
+                  is_start_ = true;
+                  break;
+                case 0x64:
+                  LOG(ERROR) <<name_<< " Receive stop command response.";
+                  is_start_ = false;
+                  break;
+                case 0x68:
+                  LOG(ERROR) <<name_<<" Receive set bandrate response.";
+                  is_right_bandrate_ = true;
+                  break;
+                default:
+                  LOG(ERROR) <<name_<< " Receive other command response.";
+                  break;
+              }
+            }           
+            break;
+          } else {
+            return;
+          }
+        case kLinelaserDataLength:
+          if (data.size() >= sizeof(LinelaserDataFrame)) {
+            is_start_ = true;
+            // LOG(ERROR)<<"Find header data size:("<<data.size()<<"),length:("<<length<<"),frame size:("<<sizeof(LinelaserDataFrame)<<").";
+            std::vector<uint8_t> linelaser_frame(
+                data.begin(), data.begin() + sizeof(LinelaserDataFrame));
+            data.erase(data.begin(), data.begin() + sizeof(LinelaserDataFrame));
+            if (get_frame_crc(linelaser_frame) != linelaser_frame.back()) {
+              //  printf("get_frame_crc:(%02x %02x).\n", get_frame_crc(linelaser_frame) ,linelaser_frame.back());
+              // LOG(ERROR)<<std::showbase<<std::hex<<"summary:("<<(int)(linelaser_frame.back())<<"),crc:("<<(int)(get_frame_crc(linelaser_frame))<<")";
+              LOG(ERROR) << name_ << " frame crc error.";
+            } else {
+              // if(name_ == "/dev/line_laser_f"){
+              //   data[]
+              // }
+              Publish(name_,get_average_range(linelaser_frame));
+              // if(name_ != "/dev/line_laser_f")
+              //   Publish(name_,get_average_range(linelaser_frame));
+              // else if(){
 
-void Linelaser::Publish(const float &range) {
+              // }
+            }
+            break;
+          } else {
+            return;
+          }
+        default:
+          LOG(ERROR) << "Receive error frame,length:(" << length << ").";
+          data.clear();
+          return;
+      }
+    }
+  }
+};
+// void Linelaser::Publish(const float &range) {
+//   static auto last = ros::Time::now();
+//   sensor_msgs::Range msg;
+//   msg.header.frame_id = name_;
+//   msg.header.stamp = ros::Time::now();
+//   msg.range = range;
+//   publisher_.publish(msg);
+//   last = msg.header.stamp;
+// }
+
+void Linelaser::Publish(const std::string& name,const float &range) {
   static auto last = ros::Time::now();
   sensor_msgs::Range msg;
-  msg.header.frame_id = name_;
+  msg.header.frame_id = name;
   msg.header.stamp = ros::Time::now();
   msg.range = range;
   publisher_.publish(msg);
   last = msg.header.stamp;
 }
 
-void Linelaser::SetRunning(const bool &running) {
+bool Linelaser::SetRunning(const bool &running) {
+  ros::Rate rate(kLinelaserFrequence);
+  LOG(ERROR) << "SetRunning:(" << running << "),is_start:(" << is_start_ << ")";
   if (running) {
     Close();
-    Open();
-    SetStartCommand();
-    // sleep(1);
-    // WriteToIO(kLinelaserSet230400);
-    // WriteToIO(kLinelaserGetAddressCommand);
-    // WriteToIO(kLinelaserGetParameterCommand);
-    // WriteToIO(kLinelaserGetVersionCommand);
-    // WriteToIO(kLinelaserStopCommand);
-    // WriteToIO(kLinelaserSet921600);
-
-    // WriteToIO(kLinelaserStartCommand);
-    // // sleep(1);
-    // WriteToIO(kLinelaserSet921600);
-    // sleep(1);
-    // WriteToIO({kLinelaserGetAddress});
-    // WriteToIO({kLinelaserGetVersion});
+    Open(kBandrateCode921600);
+    is_running_ = true;
+    auto start = ros::Time::now();
+    while ((ros::Time::now() - start).toSec() < 1) {
+      if (is_start_) {
+        LOG(ERROR) << "Set running true successful.";
+        return true;
+      } else {
+        if (WriteToIO(kLinelaserStartCommand))
+          LOG(ERROR) << name_<<" Send kLinelaserStartCommand successful.";
+        else
+          LOG(ERROR) << name_<<" Send kLinelaserStartCommand failure.";
+      }
+      rate.sleep();
+    }
+    LOG(ERROR) << "Set running true time out.";
+    return false;
   } else {
-    WriteToIO(kLinelaserStopCommand);
+    auto start = ros::Time::now();
+    while ((ros::Time::now() - start).toSec() < 1) {
+      if (!is_start_) {
+        LOG(ERROR) << "Set running false successful.";
+        return true;
+      } else {
+        if (WriteToIO(kLinelaserStopCommand))
+          LOG(ERROR) <<name_<< " Send kLinelaserStopCommand successful.";
+        else
+          LOG(ERROR) <<name_<< " Send kLinelaserStopCommand failure.";
+      }
+      usleep(10000);
+    }
+    LOG(ERROR) << "Set running false time out.";
     Close();
-    // WriteToIO({kLinelaserStopCode});
+    is_running_ = false;
+    return true;
   }
-  is_running_ = running;
 }
 
 bool Linelaser::SwitchCallBack(std_srvs::SetBool::Request &req,
                                std_srvs::SetBool::Response &res) {
-  SetRunning(req.data);
-  return true;
+  if (SetRunning(req.data)) {
+    res.success = true;
+    return true;
+  } else {
+    res.success = false;
+    return false;
+  }
 };

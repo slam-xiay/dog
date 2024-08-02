@@ -24,11 +24,11 @@ class Ultrasonic : public Serial {
 
   void UltrasonicRxThread();
 
-  bool ParseData(std::vector<uint8_t> &data);
+  void ParseData(std::vector<uint8_t> &data);
 
-  void Publish(const float &range);
+  void Publish(const std::string& name,const float &range);
 
-  void SetRunning(const bool &running);
+  bool SetRunning(const bool &running);
 
   bool SwitchCallBack(std_srvs::SetBool::Request &req,
                       std_srvs::SetBool::Response &res);

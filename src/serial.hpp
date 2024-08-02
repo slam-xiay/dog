@@ -13,23 +13,16 @@
 
 class Serial {
  public:
-  Serial(const std::string& serial_port, const int& baudrate_code_);
+  Serial(const std::string& serial_port);
   ~Serial();
-  bool Open();
+  bool Open(const int& baudrate_code);
   bool Close();
   bool ReadFromIO(std::vector<uint8_t>& data);
   bool WriteToIO(const std::vector<uint8_t>& data);
-  bool WriteToIOWithoutCrc(const std::vector<uint8_t>& data);
-  // bool ReadFromIO(uint8_t* rx_buf, size_t& rx_len);
-  bool WriteToIO(const uint8_t* tx_buf, const size_t& tx_len);
-  // bool ReadFromIO(uint8_t* rx_buf, int32_t& rx_len);
-  bool WriteToIO(const uint8_t* tx_buf, const uint32_t& tx_len);
-  bool is_open_{false};
+  int fd_{-1};
 
  private:
-  int fd_{-1};
   std::string serial_port_;
-  int baudrate_code_;
 };
 
 #endif
