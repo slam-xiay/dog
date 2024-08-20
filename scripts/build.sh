@@ -1,4 +1,5 @@
 sudo ifconfig eno1 192.168.3.200 netmask 255.255.255.0
+sudo rm -rf /dev/imu
 sudo cp ../udev/imu.rules /etc/udev/rules.d/
 sudo udevadm trigger
 

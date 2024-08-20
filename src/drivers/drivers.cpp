@@ -1,6 +1,6 @@
 #include "drivers.hpp"
-Drivers::Drivers() {
-  node_handle_ptr_ = std::make_shared<ros::NodeHandle>("");
+Drivers::Drivers(std::shared_ptr<BlackBoard> black_board_ptr):black_board_ptr_(black_board_ptr) {
+  // node_handle_ptr_ = std::make_shared<ros::NodeHandle>("");
   // if (node_handle_ptr_->hasParam("drivers")) {
   //   XmlRpc::XmlRpcValue drivers;
   //   node_handle_ptr_->getParam("drivers", drivers);
@@ -43,14 +43,14 @@ Drivers::Drivers() {
   // }
 
   multilinelaser_ptr_ =
-      std::make_shared<Multilinelaser>(node_handle_ptr_);
+      std::make_shared<Multilinelaser>(black_board_ptr);
 
   multilinelaser_thread_ptr_ =
       std::make_shared<std::thread>(&Multilinelaser::MultilinelaserRxThread,
                                       multilinelaser_ptr_);
 
   imu_ptr_ =
-      std::make_shared<Imu>(node_handle_ptr_,kImuPort);
+      std::make_shared<Imu>(black_board_ptr,kImuPort);
 
   imu_thread_ptr_ =
       std::make_shared<std::thread>(&Imu::ImuRxThread,imu_ptr_);

@@ -1,5 +1,5 @@
-#ifndef ULTRASONIC_HPP
-#define ULTRASONIC_HPP
+#ifndef DRIVERS_ULTRASONIC_HPP
+#define DRIVERS_ULTRASONIC_HPP
 #include <glog/logging.h>
 #include <ros/ros.h>
 #include <sensor_msgs/Range.h>

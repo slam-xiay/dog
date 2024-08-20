@@ -8,6 +8,12 @@ bool Serial::Open(const int& baudrate_code) {
     LOG(ERROR) << "Failure to open(" << serial_port_ << ");";
     return false;
   } else {
+    // termios last_opt;
+    // if (tcgetattr(fd_, &last_opt) == -1) {
+    //     Close();
+    //     LOG(ERROR)  <<" open tcgetattr error!";
+    //     return false;
+    // }
     LOG(ERROR) << "Succeeful to open(" << serial_port_ << "),fd:(" << fd_
                << ");";
     fcntl(fd_, F_SETFL, FNDELAY);
@@ -37,7 +43,7 @@ bool Serial::Close() {
 };
 
 bool Serial::ReadFromIO(std::vector<uint8_t>& data) {
-  LOG_EVERY_N(ERROR,30)<<"ReadFromIO fd_:("<<fd_<<").";
+  // LOG_EVERY_N(ERROR,30)<<"ReadFromIO fd_:("<<fd_<<").";
   if (fd_ == -1) return false;
   uint8_t* rx_buf = new uint8_t[kMaxSerialBuf];
   size_t rx_len = 0;

@@ -1,12 +1,11 @@
-#ifndef Multilinelaser_HPP
-#define Multilinelaser_HPP
+#ifndef DRIVERS_MULTILINELASER_HPP
+#define DRIVERS_MULTILINELASER_HPP
 #include <glog/logging.h>
 #include <signal.h>
 #include <thread>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "config.hpp"
 #include <ros/ros.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -14,6 +13,10 @@
 #include <sensor_msgs/PointCloud.h>
 #include <Eigen/Core>
 #include <Eigen/Dense>
+
+#include "config.hpp"
+#include "blackboard.hpp"
+
 struct ChannelFrame{
   uint16_t distance;
   uint8_t reflectivity;
@@ -51,7 +54,7 @@ struct MultilinelaserFrame {
 class Multilinelaser
 {
 public:
-  Multilinelaser(std::shared_ptr<ros::NodeHandle> node_handle_ptr);
+  Multilinelaser(std::shared_ptr<BlackBoard> black_board_ptr);
   ~Multilinelaser();
   Multilinelaser(const Multilinelaser &) = delete;
   Multilinelaser &operator=(const Multilinelaser &) = delete;
@@ -63,7 +66,7 @@ private:
   
   int fd_{-1};
   sockaddr_in address_;
-  std::shared_ptr<ros::NodeHandle> node_handle_ptr_;
+  std::shared_ptr<BlackBoard> black_board_ptr_;
   ros::Publisher publisher_;
   ros::ServiceServer switch_;
   std::string name_;

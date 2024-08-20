@@ -12,13 +12,13 @@
 #include <iostream>
 #include <thread>
 
-#include "drivers.hpp"
+#include "robot.hpp"
 
 int main(int argc, char *argv[]) {
   google::InitGoogleLogging(argv[0]);
   FLAGS_colorlogtostderr = true;
-  ros::init(argc, argv, "drivers");
-  std::unique_ptr<Drivers> robot_ptr = std::make_unique<Drivers>();
+  ros::init(argc, argv, "robot");
+  std::unique_ptr<Robot> robot_ptr = std::make_unique<Robot>();
   ros::spin();
   return 0;
 }

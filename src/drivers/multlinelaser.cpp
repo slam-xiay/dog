@@ -1,6 +1,6 @@
 #include "multilinelaser.hpp"// add tag 1
-Multilinelaser::Multilinelaser(std::shared_ptr<ros::NodeHandle> node_handle_ptr):node_handle_ptr_(node_handle_ptr){  
-    cloud_publisher_ = node_handle_ptr->advertise<sensor_msgs::PointCloud>("multilinelaser_cloud", 1000);
+Multilinelaser::Multilinelaser(std::shared_ptr<BlackBoard> black_board_ptr):black_board_ptr_(black_board_ptr){  
+    cloud_publisher_ = black_board_ptr_->GetNodeHandlePtr()->advertise<sensor_msgs::PointCloud>("multilinelaser_cloud", 1000);
     address_.sin_family = AF_INET;
     address_.sin_port = htons(2368);
     address_.sin_addr.s_addr = INADDR_ANY;
@@ -44,8 +44,8 @@ bool Multilinelaser::ParseData(std::vector<uint8_t>& data){
   cloud_.channels[0].name = "intensities";
   while (data.size() >= sizeof(MultilinelaserFrame)) {
     size_t drop = 0;
-    Eigen::Vector3d laser_link(kMultilinelaserToBaseTranslationX, 
-      kMultilinelaserToBaseTranslationY, kMultilinelaserToBaseTranslationZ);
+    // Eigen::Vector3d laser_link(kMultilinelaserToBaseTranslationX, 
+    //   kMultilinelaserToBaseTranslationY, kMultilinelaserToBaseTranslationZ);
     while(data.size() >= sizeof(MultilinelaserFrame)){
       if(data[0] == kMultilinelaserHeader1&&data[1]==kMultilinelaserHeader2){
         break;
@@ -62,12 +62,17 @@ bool Multilinelaser::ParseData(std::vector<uint8_t>& data){
             data.end() + sizeof(MultilinelaserFrame));
         data.erase(data.begin(), data.begin() + sizeof(MultilinelaserFrame));
         MultilinelaserFrame *multiline_laser_frame = (MultilinelaserFrame*)multiline_laser_data.data();
+        Time now = GetNow();
+        for(size_t i = 0; i<8; i++){
+          Time timestamp = now - (8-i)/kMultilinelaserFrequence;                    
+        }
+
         for(auto&& block:multiline_laser_frame->block){
           double yaw = DegToRad(double(block.azimuth)/100);
           for(size_t i = 0;i<16;i++){
             double pitch = DegToRad(kMultilinelaserPitchOffset[i]);
             double range = double(block.channel[i].distance)*0.004;
-            Eigen::Vector3d position = laser_link+Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
+            Eigen::Vector3d position = kMultilinelaserLink+Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()) *
                                         Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
                                         Eigen::Vector3d(range, 0., 0.);
             geometry_msgs::Point32 pt;
@@ -77,7 +82,10 @@ bool Multilinelaser::ParseData(std::vector<uint8_t>& data){
             cloud_.points.push_back(pt);
             cloud_.channels[0].values.push_back(block.channel[i].reflectivity);
           }
-          if(yaw>6.28) Publish();
+          if(yaw>2*kPI-0.01) {
+            if(kPublishMultilinelaser) Publish();
+            if(kBlackBoardMultilinelaser);
+          }
           // LOG_EVERY_N(ERROR,30)<<"yaw:("<<yaw<<")";
         }      
         // LOG(ERROR)<<"time:("<<(uint32_t(multiline_laser_frame->timestamp[3])<<24
@@ -103,7 +111,7 @@ void Multilinelaser::Publish(){
   cloud_.channels[0].values.clear();
 };
 void Multilinelaser::MultilinelaserRxThread() {
-  ros::Rate rate(kLidarFrequence);
+  ros::Rate rate(kMultilinelaserFrequence);
   std::vector<uint8_t> rx_data;
   LOG(ERROR) << name_ << "thread started!";
   while (true) {

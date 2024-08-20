@@ -1,29 +1,26 @@
-#ifndef DRIVERS_HPP
-#define DRIVERS_HPP
+#ifndef DRIVERS_DRIVERS_HPP
+#define DRIVERS_DRIVERS_HPP
 #include <glog/logging.h>
 #include <ros/ros.h>
 
 #include <thread>
-// #include <signal.h>
-
-// #include <thread>
 #include <vector>
 
-// #include "camera.hpp"
 #include "linelaser.hpp"
 #include "ultrasonic.hpp"
 #include "multilinelaser.hpp"
 #include "imu.hpp"
+#include "../blackboard.hpp"
 
 class Drivers {
  public:
-  Drivers();
+  Drivers(std::shared_ptr<BlackBoard> black_board_ptr_);
   ~Drivers();
   Drivers(const Drivers &) = delete;
   Drivers &operator=(const Drivers &) = delete;
 
  private:
-  std::shared_ptr<ros::NodeHandle> node_handle_ptr_;
+    std::shared_ptr<BlackBoard> black_board_ptr_;  
   // std::vector<std::shared_ptr<Ultrasonic>> ultrasonic_ptrs_;
   // std::vector<std::shared_ptr<std::thread>> ultrasonic_thread_ptrs_;
   // std::vector<std::shared_ptr<Linelaser>> linelaser_ptrs_;

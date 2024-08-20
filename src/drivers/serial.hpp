@@ -1,11 +1,10 @@
-#ifndef SERIAL_HPP_
-#define SERIAL_HPP_
+#ifndef DRIVERS_SERIAL_HPP_
+#define DRIVERS_SERIAL_HPP_
 
 #include <fcntl.h>
 #include <linux/serial.h>
 #include <sys/ioctl.h>
 #include <termios.h>
-
 #include <string>
 #include <vector>
 

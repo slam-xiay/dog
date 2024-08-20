@@ -2,6 +2,7 @@
 #define CONFIG_HPP_
 #include <glog/logging.h>
 #include <termios.h>
+#include "blackboard.hpp"
 constexpr float kPI = 3.1415926f;
 template <typename T>
 T DegToRad(const T& deg) {
@@ -74,7 +75,6 @@ const std::string kImuPort = "/dev/imu";
 constexpr int kLinelaserFrequence = 30;
 constexpr int kBandrateCode115200 = B115200;
 constexpr int kBandrateCode230400 = B230400;
-// constexpr int kBandrateCode512000 = int(B512000);
 constexpr int kBandrateCode921600 = B921600;
 constexpr int kBandrateCode1500000 = B1500000;
 
@@ -122,21 +122,26 @@ constexpr int kLidarSourcePort =10000;
 constexpr int kLidarDestinationPort =2368;
 constexpr int kGpsSourcePort = 10110;
 constexpr double kLidarStartAngle = 0.f;
-constexpr int kLidarFrequence = 2500;
+constexpr int kMultilinelaserFrequence = 250;
+constexpr double kMultilinelaserCollectDuration = 5.632e-6;
 
 const std::vector<double> kMultilinelaserPitchOffset = {15,13,11,9,7,5,3,1,-1,-3,-5,-7,-9,-11,-13,-15};
 
 constexpr uint8_t kMultilinelaserHeader1 = 0xEE;
 constexpr uint8_t kMultilinelaserHeader2 = 0xFF;
-constexpr double kMultilinelaserToBaseTranslationX = 0.f;
-constexpr double kMultilinelaserToBaseTranslationY = 0.f;
-constexpr double kMultilinelaserToBaseTranslationZ = 0.f;
-
-
+// constexpr double kMultilinelaserToBaseTranslationX = 0.f;
+// constexpr double kMultilinelaserToBaseTranslationY = 0.f;
+// constexpr double kMultilinelaserToBaseTranslationZ = 0.f;
+const Eigen::Vector3d kMultilinelaserLink(0.f,0.f,0.f);
 constexpr uint8_t kImuHeader1 = 0x3A;
 constexpr uint8_t kImuAddress1 = 0x01;
 constexpr uint8_t kImuAddress2 = 0x00;
 constexpr uint8_t kImuEnd1 = 0x0D;
 constexpr uint8_t kImuEnd2 = 0x0A;
+constexpr bool kPublishImu = false;
+constexpr bool kBlackBoardImu = true;
+constexpr bool kPublishMultilinelaser = false;
+constexpr bool kBlackBoardMultilinelaser = true;
+// static BlackBoard blackboard;
 // constexpr uint8_t kLinelaserSetBaudrate = 0x68;
 #endif
