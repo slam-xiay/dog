@@ -58,7 +58,8 @@ constexpr termios kUltrasonicSerialOptions = {
 };
 
 constexpr int64_t kPerReadTimeoutns = 1000;  // ns 0.001ms
-constexpr int kMaxSerialBuf = 115200;
+// constexpr int kMaxSerialBuf = 115200;
+constexpr int kMaxSerialBuf = 921600;
 constexpr uint8_t kUltrasonicFrameHeader = 0xFF;
 constexpr uint8_t kUltrasonicStartCode = 0xAA;
 const std::vector<std::string> kUltrasonicPorts = {
@@ -122,17 +123,15 @@ constexpr int kLidarSourcePort =10000;
 constexpr int kLidarDestinationPort =2368;
 constexpr int kGpsSourcePort = 10110;
 constexpr double kLidarStartAngle = 0.f;
-constexpr int kMultilinelaserFrequence = 250;
+constexpr int kMultilinelaserFrequence = 2500;
 constexpr double kMultilinelaserCollectDuration = 5.632e-6;
-
-const std::vector<double> kMultilinelaserPitchOffset = {15,13,11,9,7,5,3,1,-1,-3,-5,-7,-9,-11,-13,-15};
-
+const std::vector<double> kMultilinelaserPitchOffset = {15.,13.,11.,9.,7.,5.,3.,1.,-1.,-3.,-5.,-7.,-9.,-11.,-13.,-15.};
 constexpr uint8_t kMultilinelaserHeader1 = 0xEE;
 constexpr uint8_t kMultilinelaserHeader2 = 0xFF;
 // constexpr double kMultilinelaserToBaseTranslationX = 0.f;
 // constexpr double kMultilinelaserToBaseTranslationY = 0.f;
 // constexpr double kMultilinelaserToBaseTranslationZ = 0.f;
-const Eigen::Vector3d kMultilinelaserLink(0.f,0.f,0.f);
+const Eigen::Vector3f kMultilinelaserLink(0.f,0.f,0.f);
 constexpr uint8_t kImuHeader1 = 0x3A;
 constexpr uint8_t kImuAddress1 = 0x01;
 constexpr uint8_t kImuAddress2 = 0x00;
@@ -140,8 +139,10 @@ constexpr uint8_t kImuEnd1 = 0x0D;
 constexpr uint8_t kImuEnd2 = 0x0A;
 constexpr bool kPublishImu = false;
 constexpr bool kBlackBoardImu = true;
-constexpr bool kPublishMultilinelaser = false;
+constexpr bool kPublishMultilinelaser = true;
+constexpr bool kPublishIntensityCloud = true;
 constexpr bool kBlackBoardMultilinelaser = true;
+constexpr bool kBlackBoardIntensityCloud = true;
 // static BlackBoard blackboard;
 // constexpr uint8_t kLinelaserSetBaudrate = 0x68;
 #endif

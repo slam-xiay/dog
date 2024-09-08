@@ -43,19 +43,19 @@ bool Imu::ParseData(std::vector<uint8_t> &data) {
         data.erase(data.begin());
       }
     }
-    if(drop) LOG(ERROR) << "Drop size:(" << drop << "),data size:("<<data.size()<<").";
+    // if(drop) LOG(ERROR) << "Drop size:(" << drop << "),data size:("<<data.size()<<").";
     if(data.size()<sizeof(ImuFrame)) return true;
     std::vector<uint8_t> imu_data(data.begin(),data.begin() + sizeof(ImuFrame));
     data.erase(data.begin(), data.begin() + sizeof(ImuFrame));
     ImuFrame *imu_frame = (ImuFrame*)imu_data.data();
     size_t length = size_t(uint16_t(imu_data[6]) << 8 | uint16_t(imu_data[5]));
     if(length!=kImuContentSize){
-      LOG(ERROR)<<"Imu frame length error:("<<length<<"),("<<size_t(imu_frame->length)<<").";
+      // LOG(ERROR)<<"Imu frame length error:("<<length<<"),("<<size_t(imu_frame->length)<<").";
       continue;
     } 
     if(imu_frame->end[0]!=kImuEnd1||imu_frame->end[1]!=kImuEnd2){
-      LOG(ERROR)<< std::setfill('0') << std::setw(2) << std::hex <<"Imu frame tail error:(Ox"
-        <<int(imu_frame->end[0])<<"),(Ox"<<int(imu_frame->end[1])<<")";
+      // LOG(ERROR)<< std::setfill('0') << std::setw(2) << std::hex <<"Imu frame tail error:(Ox"
+      //   <<int(imu_frame->end[0])<<"),(Ox"<<int(imu_frame->end[1])<<")";
       continue;
     }
     if(!crc_check(imu_data)){
@@ -63,19 +63,19 @@ bool Imu::ParseData(std::vector<uint8_t> &data) {
       continue;
     }
     if(kPublishImu) Publish(imu_frame);
-    if(kBlackBoardImu) CachePry(imu_frame);
+    if(kBlackBoardImu) CacheRpy(imu_frame);
   }
   return true;
 }
 
-void Imu::CachePry(const ImuFrame *imu_frame){
+void Imu::CacheRpy(const ImuFrame *imu_frame){
   times_.push_back(ros::Time::now());
-  black_board_ptr_->InsertTimePry(TimePry{GetNow(),
-      Eigen::Vector3f(imu_frame->euler[0],imu_frame->euler[1],imu_frame->euler[2])});
+  black_board_ptr_->InsertTimeRpy(TimeRpy{GetNow(),
+      Eigen::Vector3f(DegToRad(imu_frame->euler[0]),DegToRad(imu_frame->euler[1]),DegToRad(imu_frame->euler[2]))});
   while (times_.size() > 100) {
     times_.erase(times_.begin());
     LOG_EVERY_N(ERROR, 100)
-        << name_ << " cache pry frequence in last 100 message:("
+        << name_ << " cache rpy frequence in last 100 message:("
         << double(times_.size() - 1) /
                ((times_.back() - times_.front()).toSec())
         << ")hz.";

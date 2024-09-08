@@ -62,7 +62,7 @@ class Imu : public Serial {
 
   bool ParseData(std::vector<uint8_t> &data);
 
-  void CachePry(const ImuFrame *imu_frame);
+  void CacheRpy(const ImuFrame *imu_frame);
 
   void Publish(const ImuFrame *imu_frame);
 

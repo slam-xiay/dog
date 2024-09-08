@@ -15,6 +15,8 @@
 #include "robot.hpp"
 
 int main(int argc, char *argv[]) {
+  // uint8_t a = uint8_t(int8_t(201));
+  // uint8_t b = uint8_t(int8_t(200));
   google::InitGoogleLogging(argv[0]);
   FLAGS_colorlogtostderr = true;
   ros::init(argc, argv, "robot");

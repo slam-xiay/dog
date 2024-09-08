@@ -1,7 +1,8 @@
 <launch>
+    <node name="driver" pkg="driver" type="driver_node" output="screen"/>
+</launch>
     <!-- <arg name="hardware_version" default="$(env HARDWARE_VERSION)" /> -->
     <!-- <rosparam file="$(find ikitbot_driver)/cfg/base_cfg_1.2.0.yaml" /> -->
-    <node name="driver" pkg="driver" type="driver_node" output="screen" />
+    <!-- <node name="driver" pkg="driver" type="driver_node" output="screen" launch-prefix="gdb -ex run args"/> -->   
  <!-- <node name="rviz" pkg="rviz" type="rviz" args = "-d /home/xiay/catkin_ws/src/slam/rviz/default.rviz"/> -->
  <!-- <node name="rosbag" pkg="rosbag" type="play" args="-r 2 /home/xiay/catkin_ws/bag/598.bag topic /imu /odom /scan" /> -->
-</launch>

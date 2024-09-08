@@ -13,6 +13,7 @@
 #include <sensor_msgs/PointCloud.h>
 #include <Eigen/Core>
 #include <Eigen/Dense>
+#include <map>
 
 #include "config.hpp"
 #include "blackboard.hpp"
@@ -62,8 +63,9 @@ public:
   bool ReadFromIO(std::vector<uint8_t>& data);
   bool ParseData(std::vector<uint8_t> &data);
   void Publish();
+  void IntensityCloudPublish();
+
 private:
-  
   int fd_{-1};
   sockaddr_in address_;
   std::shared_ptr<BlackBoard> black_board_ptr_;
@@ -72,7 +74,12 @@ private:
   std::string name_;
   bool is_running_{true};
   sensor_msgs::PointCloud cloud_;
+  sensor_msgs::PointCloud intensity_cloud_;
+  // std::vector<std::vector<Eigen::Vector3f>> line_clouds_;
   ros::Publisher cloud_publisher_;
+  ros::Publisher intensity_cloud_publisher_;
+  std::map<uint32_t,Eigen::Vector3f> address_cloud_;
+  // std::vector<std::pair<uint32_t,Eigen::Vector3f>> address_cloud_;
 };
 
 #endif 
