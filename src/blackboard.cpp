@@ -2,6 +2,7 @@
 BlackBoard::BlackBoard(){
     node_handle_ptr_ = std::make_shared<ros::NodeHandle>("");
     time_rpys_ptr_ = std::make_shared<std::vector<TimeRpy>>();
+    address_clouds_ptr_ = std::make_shared<std::vector<TimeAddressCloud>>();
 }
 
 std::shared_ptr<ros::NodeHandle> BlackBoard::GetNodeHandlePtr(){

@@ -7,6 +7,7 @@
 
 #include "blackboard.hpp"
 #include "drivers/drivers.hpp"
+#include "service/service.hpp"
 
 
 class Robot {
@@ -22,6 +23,7 @@ public:
 private:
     std::shared_ptr<BlackBoard> black_board_ptr_;
     std::shared_ptr<Drivers> drivers_ptr_;
+    std::shared_ptr<Service> service_ptr_;
 };
 
 #endif

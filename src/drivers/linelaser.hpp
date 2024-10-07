@@ -43,14 +43,6 @@ class Linelaser : public Serial {
   bool SwitchCallBack(std_srvs::SetBool::Request &req,
                       std_srvs::SetBool::Response &res);
 
-  // bool Reset();
-
-//   bool SetBandrate(const int &bandrate_code);
-
-//   bool SetStartCommand();
-
-
-
  private:
   std::shared_ptr<ros::NodeHandle> node_handle_ptr_;
   ros::Publisher publisher_;

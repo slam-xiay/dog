@@ -1,5 +1,6 @@
 <launch>
-    <node name="driver" pkg="driver" type="driver_node" output="screen"/>
+    <node name="driver" pkg="driver" type="driver_node" output="screen" launch-prefix="xterm -e gdb -ex run --args"/>
+    <!-- <node name="driver" pkg="driver" type="driver_node" output="screen" launch-prefix="gdb -ex run args"/>    -->
 </launch>
     <!-- <arg name="hardware_version" default="$(env HARDWARE_VERSION)" /> -->
     <!-- <rosparam file="$(find ikitbot_driver)/cfg/base_cfg_1.2.0.yaml" /> -->

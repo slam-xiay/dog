@@ -4,6 +4,7 @@
 #include <termios.h>
 #include "blackboard.hpp"
 constexpr float kPI = 3.1415926f;
+constexpr float kResolution = 0.05f;
 template <typename T>
 T DegToRad(const T& deg) {
   return T(kPI * deg / 180.);
@@ -118,7 +119,7 @@ const std::vector<uint8_t> kLinelaserSet230400 = {
     0xA5, 0xA5, 0xA5, 0xA5, 0x00, 0x68, 0x01, 0x00, 0x01, 0x6A};
 
 
-const std::string kServerIP = "192.168.3.201";
+const std::string kServerIP = "192.168.1.201";
 constexpr int kLidarSourcePort =10000;
 constexpr int kLidarDestinationPort =2368;
 constexpr int kGpsSourcePort = 10110;
@@ -143,6 +144,12 @@ constexpr bool kPublishMultilinelaser = true;
 constexpr bool kPublishIntensityCloud = true;
 constexpr bool kBlackBoardMultilinelaser = true;
 constexpr bool kBlackBoardIntensityCloud = true;
+constexpr bool kBlackBoardAddressCloud = true;
 // static BlackBoard blackboard;
 // constexpr uint8_t kLinelaserSetBaudrate = 0x68;
+constexpr float kMaxDockerRange=0.5f;
+constexpr float kMinDockerRange=0.2f;
+constexpr uint32_t kPlaneSize=100;
+constexpr size_t kMinPlaneSize = 30;
+constexpr float kMinPlanePointDistance = 0.3f;
 #endif

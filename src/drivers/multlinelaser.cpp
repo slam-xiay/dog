@@ -106,7 +106,7 @@ bool Multilinelaser::ParseData(std::vector<uint8_t>& data){
             pt.z = position.z();
             cloud_.points.push_back(pt);
             cloud_.channels[0].values.push_back(intensity);
-            if(kPublishIntensityCloud && intensity>uint8_t(int8_t(200))){
+            if(kPublishIntensityCloud && intensity>uint8_t(int8_t(250))){
               uint32_t address = uint32_t(uint16_t(i))<<16|uint16_t(j);
               intensity_cloud_.points.push_back(pt);
               intensity_cloud_.channels[0].values.push_back(intensity);     

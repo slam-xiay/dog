@@ -20,7 +20,7 @@ class Drivers {
   Drivers &operator=(const Drivers &) = delete;
 
  private:
-    std::shared_ptr<BlackBoard> black_board_ptr_;  
+  std::shared_ptr<BlackBoard> black_board_ptr_;  
   // std::vector<std::shared_ptr<Ultrasonic>> ultrasonic_ptrs_;
   // std::vector<std::shared_ptr<std::thread>> ultrasonic_thread_ptrs_;
   // std::vector<std::shared_ptr<Linelaser>> linelaser_ptrs_;

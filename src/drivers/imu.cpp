@@ -8,7 +8,7 @@ Imu::Imu(std::shared_ptr<BlackBoard> black_board_ptr, const std::string &serial_
       name_, &Imu::SwitchCallBack, this);
   // Close();
   // Open(kBandrateCode921600);
-  is_running_=true;
+  // is_running_=true;
 }
 
 Imu::~Imu(){
